@@ -648,12 +648,11 @@ mouse-1: Display minor modes menu"
 ;; VCS
 ;;
 
-(defun doom-modeline-vcs-icon (icon &optional unicode text face)
+(defun doom-modeline-vcs-icon (icon-set icon &optional unicode text face)
   "Displays the vcs ICON with FACE and VOFFSET.
 
-UNICODE and TEXT are fallbacks.
-Uses `nerd-icons-octicon' to fetch the icon."
-  (doom-modeline-icon 'octicon icon unicode text :face face))
+UNICODE and TEXT are fallbacks."
+  (doom-modeline-icon icon-set icon unicode text :face face))
 
 (defvar-local doom-modeline--vcs-icon nil)
 (defun doom-modeline-update-vcs-icon (&rest _)
@@ -662,16 +661,24 @@ Uses `nerd-icons-octicon' to fetch the icon."
         (when (and vc-mode buffer-file-name)
           (let* ((backend (vc-backend buffer-file-name))
                  (state   (vc-state buffer-file-name backend)))
-            (cond ((memq state '(edited added))
-                   (doom-modeline-vcs-icon "nf-oct-git_compare" "🔃" "*" 'doom-modeline-info))
+            (cond ((eq state 'up-to-date)
+                   (doom-modeline-vcs-icon 'faicon "nf-fa-check_circle" "🔃" "*" 'doom-modeline-info))
+                  ((eq state 'added)
+                   (doom-modeline-vcs-icon 'codicon "nf-cod-diff_added" "🔃" "*" 'doom-modeline-info))
+                  ((eq state 'edited)
+                   (doom-modeline-vcs-icon 'codicon "nf-cod-diff_modified" "🔃" "*" 'doom-modeline-info))
+                  ((eq state 'ignored)
+                   (doom-modeline-vcs-icon 'codicon "nf-cod-diff_ignored" "🔃" "*" 'doom-modeline-info))
                   ((eq state 'needs-merge)
-                   (doom-modeline-vcs-icon "nf-oct-git_merge" "🔀" "?" 'doom-modeline-info))
+                   (doom-modeline-vcs-icon 'octicon "nf-oct-git_merge" "🔀" "?" 'doom-modeline-info))
                   ((eq state 'needs-update)
-                   (doom-modeline-vcs-icon "nf-oct-arrow_down" "⬇" "!" 'doom-modeline-warning))
-                  ((memq state '(removed conflict unregistered))
-                   (doom-modeline-vcs-icon "nf-oct-alert" "⚠" "!" 'doom-modeline-urgent))
+                   (doom-modeline-vcs-icon 'octicon "nf-oct-arrow_down" "⬇" "!" 'doom-modeline-warning))
+                  ((eq state 'removed)
+                   (doom-modeline-vcs-icon 'codicon "nf-cod-diff_removed" "⚠" "!" 'doom-modeline-urgent))
+                  ((memq state '(conflict unregistered))
+                   (doom-modeline-vcs-icon 'octicon "nf-oct-alert" "⚠" "!" 'doom-modeline-urgent))
                   (t
-                   (doom-modeline-vcs-icon "nf-oct-git_branch" "" "@" 'doom-modeline-info)))))))
+                   (doom-modeline-vcs-icon 'octicon "nf-oct-git_branch" "" "@" 'doom-modeline-info)))))))
 (add-hook 'find-file-hook #'doom-modeline-update-vcs-icon)
 (add-hook 'after-save-hook #'doom-modeline-update-vcs-icon)
 (advice-add #'vc-refresh-state :after #'doom-modeline-update-vcs-icon)
